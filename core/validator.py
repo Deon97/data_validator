@@ -16,6 +16,31 @@ def _check_type(series: pd.Series, typ: str) -> pd.Series:
         return s.str.lower().isin(BOOL_VALUES)
     return pd.Series(True, index=s.index)
 
+MATCH_THRESHOLD = 0.5  # at least 50% of schema columns must be found
+
+def check_schema_match(df: pd.DataFrame, schema: dict) -> dict:
+    """Compare file columns with schema columns."""
+    expected = [r["name"] for r in schema["columns"]]
+    found = [c for c in expected if c in df.columns]
+    missing = [c for c in expected if c not in df.columns]
+    extra = [c for c in df.columns if c not in expected]
+    ratio = len(found) / len(expected) if expected else 0
+    return {
+        "ratio": ratio,
+        "found": found,
+        "missing": missing,
+        "extra": extra,
+        "is_wrong_schema": ratio < MATCH_THRESHOLD,
+    }
+
+def suggest_schema(df: pd.DataFrame, schemas: dict):
+    """schemas = {name: schema_dict}. Return (best_name, ratio) or (None, 0)."""
+    best_name, best_ratio = None, 0
+    for name, schema in schemas.items():
+        ratio = check_schema_match(df, schema)["ratio"]
+        if ratio > best_ratio:
+            best_name, best_ratio = name, ratio
+    return (best_name, best_ratio) if best_ratio > 0 else (None, 0)
 
 def validate(df: pd.DataFrame, schema: dict):
     """Return (structure_messages, errors_table, invalid_rows_table)."""

@@ -1,0 +1,74 @@
+{
+  "name": "netflix_data",
+  "version": 2,
+  "created_at": "2026-11-17T15:41:46",
+  "updated_at": "2026-11-17T15:46:07",
+  "columns": [
+    {
+      "name": "show_id",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "director",
+      "type": "string",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "cast",
+      "type": "string",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "country",
+      "type": "string",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "date_added",
+      "type": "date",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "release_year",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "rating",
+      "type": "string",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "duration",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "genres",
+      "type": "string",
+      "required": true,
+      "unique": false
+    }
+  ]
+}

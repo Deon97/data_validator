@@ -5,7 +5,7 @@ import streamlit as st
 
 from core import file_reader as fr
 from core import schema_manager as sm
-from core.validator import validate
+from core.validator import validate, check_schema_match, suggest_schema
 
 st.set_page_config(page_title="Data Validation Tool", layout="wide")
 st.title("✅ Data Validation Tool")
@@ -91,10 +91,38 @@ elif page.startswith("2"):
                 if fr.is_excel(f):
                     sheet = st.selectbox("Sheet", fr.list_sheets(f))
                 if st.button("Run validation", type="primary"):
+                    st.session_state.pop("result", None)   # clear old result
                     df = fr.read_file(f, sheet)
+                    
+                    # NEW: empty-file check
+                    if df.empty:
+                        st.error("❌ The file has no data rows. Please upload a file "
+                                "that contains data.")
+                        st.stop()
+
                     schema = sm.load_schema(schema_name)
-                    structure, errs, invalid = validate(df, schema)
-                    st.session_state["result"] = (len(df), structure, errs, invalid)
+                    match = check_schema_match(df, schema)
+
+                    if match["is_wrong_schema"]:
+                        st.error(
+                            f"❌ Wrong schema selected. Only {len(match['found'])} of "
+                            f"{len(schema['columns'])} schema columns were found in this file. "
+                            "Please choose the correct schema."
+                        )
+                        all_schemas = {n: sm.load_schema(n) for n in names}
+                        best, ratio = suggest_schema(df, all_schemas)
+                        if best and best != schema_name and ratio >= 0.5:
+                            st.info(f"💡 Suggested schema: **{best}** "
+                                    f"({ratio:.0%} of columns match).")
+                        else:
+                            st.info("💡 No saved schema matches this file. Go to "
+                                    "**Create Schema** to create one.")
+                        with st.expander("Column comparison"):
+                            st.write("**Missing from file:**", ", ".join(match["missing"]) or "-")
+                            st.write("**Unexpected in file:**", ", ".join(match["extra"]) or "-")
+                    else:
+                        structure, errs, invalid = validate(df, schema)
+                        st.session_state["result"] = (len(df), structure, errs, invalid)
             except Exception as e:
                 st.error(f"Could not process file: {e}")
 
