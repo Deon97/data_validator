@@ -1,0 +1,38 @@
+{
+  "name": "customer",
+  "version": 8,
+  "created_at": "2026-11-17T13:40:41",
+  "updated_at": "2026-11-17T14:48:41",
+  "columns": [
+    {
+      "name": "customer_id",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "age",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "items",
+      "type": "string",
+      "required": true,
+      "unique": false
+    }
+  ]
+}
