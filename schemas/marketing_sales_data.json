@@ -1,0 +1,58 @@
+{
+  "name": "marketing_sales_data",
+  "version": 6,
+  "created_at": "2026-11-18T16:38:41",
+  "updated_at": "2026-11-18T17:32:16",
+  "columns": [
+    {
+      "name": "TV",
+      "type": "string",
+      "required": true,
+      "unique": false,
+      "allowed_values": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "match_mode": "exact",
+      "case_sensitive": false
+    },
+    {
+      "name": "Radio",
+      "type": "float",
+      "required": true,
+      "unique": false,
+      "sign": "non-negative"
+    },
+    {
+      "name": "Social Media",
+      "type": "float",
+      "required": true,
+      "unique": false,
+      "min_value": 1.5,
+      "max_value": 7.5,
+      "sign": "non-negative"
+    },
+    {
+      "name": "Influencer",
+      "type": "string",
+      "required": true,
+      "unique": false,
+      "allowed_values": [
+        "micro",
+        "mega",
+        "macro",
+        "nano"
+      ],
+      "match_mode": "exact",
+      "case_sensitive": false
+    },
+    {
+      "name": "Sales",
+      "type": "float",
+      "required": true,
+      "unique": false,
+      "sign": "non-negative"
+    }
+  ]
+}

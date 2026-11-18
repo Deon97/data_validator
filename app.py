@@ -20,6 +20,32 @@ def to_excel_bytes(df):
     df.to_excel(buffer, index=False)
     return buffer.getvalue()
 
+def to_excel_bytes(df):
+    buffer = io.BytesIO()
+    df.to_excel(buffer, index=False)
+    return buffer.getvalue()
+
+
+COLUMN_CONFIG = {
+    "name": st.column_config.TextColumn(required=True),
+    "type": st.column_config.SelectboxColumn(options=sm.TYPES, required=True),
+    "required": st.column_config.CheckboxColumn(),
+    "unique": st.column_config.CheckboxColumn(),
+    "allowed_values": st.column_config.TextColumn(
+        help="Comma-separated, optional. Example: Manager, Analyst"),
+    "match_mode": st.column_config.SelectboxColumn(
+        "match", options=sm.MATCH_MODES,
+        help="exact = whole value must match. contains = value only has to include it "
+             "(Manager also accepts Senior Manager)"),
+    "case_sensitive": st.column_config.CheckboxColumn(
+        help="Untick to ignore capital letters"),
+    "min_value": st.column_config.NumberColumn(help="Numbers only"),
+    "max_value": st.column_config.NumberColumn(help="Numbers only"),
+    "sign": st.column_config.SelectboxColumn(
+        options=sm.SIGNS, help="positive = above 0, negative = below 0"),
+    "date_format": st.column_config.SelectboxColumn(
+        options=list(sm.DATE_FORMATS.keys()), help="Only used for date columns"),
+}
 
 # ---------------- Page 1: Create schema ----------------
 if page.startswith("1"):
@@ -36,45 +62,35 @@ if page.startswith("1"):
             )
             base = f.name.rsplit(".", 1)[0]
 
-            for sh in chosen:
+            for i, sh in enumerate(chosen):
                 label = f"{base}_{sh}" if sh else base
                 st.subheader(f"Sheet: {sh}" if sh else "File schema")
                 df = fr.read_file(f, sh)
                 st.caption("Preview (first 5 rows)")
                 st.dataframe(df.head(5), use_container_width=True)
 
-                cols = pd.DataFrame(sm.infer_schema(df))
-                cols["allowed_values"] = ""
+                cols = pd.DataFrame(sm.columns_to_rows(sm.infer_schema(df)))
                 st.caption("Review and edit the rules, then save.")
                 edited = st.data_editor(
-                    cols,
-                    key=f"ed_{label}",
-                    use_container_width=True,
-                    disabled=["name"],
-                    column_config={
-                        "type": st.column_config.SelectboxColumn(
-                            options=sm.TYPES, required=True),
-                        "allowed_values": st.column_config.TextColumn(
-                            help="Comma-separated, optional"),
-                    },
-                )
+                    cols, key=f"ed_{i}_{label}", use_container_width=True,
+                    disabled=["name"], column_config=COLUMN_CONFIG)
                 name = st.text_input("Schema name", sm.safe_name(label),
-                                     key=f"nm_{label}")
+                                     key=f"nm_{i}_{label}")
 
-                if st.button(f"Save schema '{name}'", key=f"sv_{label}"):
-                    output = []
-                    for r in edited.to_dict("records"):
-                        raw = str(r.pop("allowed_values") or "")
-                        values = [v.strip() for v in raw.split(",") if v.strip()]
-                        if values:
-                            r["allowed_values"] = values
-                        output.append(r)
-                    existed = name in sm.list_schemas()
-                    saved = sm.save_schema(name, output)
-                    st.success(f"Schema '{saved}' saved"
-                               + (" (new version)." if existed else "."))
+                if st.button(f"Save schema '{name}'", key=f"sv_{i}_{label}"):
+                    output = sm.rows_to_columns(edited.to_dict("records"))
+                    problems = sm.validate_columns(output)
+                    if problems:
+                        for p in problems:
+                            st.error(p)
+                    else:
+                        existed = name in sm.list_schemas()
+                        saved = sm.save_schema(name, output)
+                        st.success(f"Schema '{saved}' saved"
+                                   + (" (new version)." if existed else "."))
         except Exception as e:
             st.error(f"Could not process file: {e}")
+
 
 # ---------------- Page 2: Validate ----------------
 elif page.startswith("2"):
@@ -166,55 +182,23 @@ else:
         s = sm.load_schema(n)
         title = f"{n}  (v{s['version']}, updated {s.get('updated_at', s['created_at'])})"
         with st.expander(title):
-            # Convert the stored list into a table the user can edit
-            rows = []
-            for c in s["columns"]:
-                rows.append({
-                    "name": c["name"],
-                    "type": c.get("type", "string"),
-                    "required": bool(c.get("required", False)),
-                    "unique": bool(c.get("unique", False)),
-                    "allowed_values": ", ".join(c.get("allowed_values", [])),
-                })
+            rows = sm.columns_to_rows(s["columns"])
 
             st.caption("Edit the table below. Use the empty last row to add a "
-                       "column. Select a row and press Delete to remove it.")
+                       "column. Select a row and press Delete to remove it. "
+                       "Scroll right to see all rule columns.")
             edited = st.data_editor(
                 pd.DataFrame(rows),
                 key=f"edit_{n}",
                 num_rows="dynamic",
                 use_container_width=True,
-                column_config={
-                    "name": st.column_config.TextColumn(required=True),
-                    "type": st.column_config.SelectboxColumn(
-                        options=sm.TYPES, required=True),
-                    "required": st.column_config.CheckboxColumn(),
-                    "unique": st.column_config.CheckboxColumn(),
-                    "allowed_values": st.column_config.TextColumn(
-                        help="Comma-separated, optional"),
-                },
+                column_config=COLUMN_CONFIG,
             )
 
             col_save, col_del = st.columns([1, 1])
 
             if col_save.button("💾 Save changes", key=f"save_{n}"):
-                new_cols = []
-                for r in edited.to_dict("records"):
-                    name_value = str(r.get("name") or "").strip()
-                    if not name_value and not r.get("type"):
-                        continue  # skip fully empty rows
-                    rule = {
-                        "name": name_value,
-                        "type": r.get("type") or "string",
-                        "required": bool(r.get("required")),
-                        "unique": bool(r.get("unique")),
-                    }
-                    raw = str(r.get("allowed_values") or "")
-                    values = [v.strip() for v in raw.split(",") if v.strip()]
-                    if values:
-                        rule["allowed_values"] = values
-                    new_cols.append(rule)
-
+                new_cols = sm.rows_to_columns(edited.to_dict("records"))
                 problems = sm.validate_columns(new_cols)
                 if problems:
                     for p in problems:

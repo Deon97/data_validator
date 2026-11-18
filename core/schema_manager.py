@@ -103,4 +103,88 @@ def validate_columns(columns: list[dict]) -> list[str]:
     for c in columns:
         if c.get("type") not in TYPES:
             problems.append(f"Invalid type for column '{c.get('name')}'.")
+
+    for c in columns:
+        lo, hi = c.get("min_value"), c.get("max_value")
+        if lo is not None and hi is not None and lo > hi:
+            problems.append(f"Column '{c.get('name')}': min is greater than max.")
+        if c.get("sign") == "positive" and hi is not None and hi <= 0:
+            problems.append(f"Column '{c.get('name')}': max must be above 0 for positive only.")
+        if c.get("sign") == "negative" and lo is not None and lo >= 0:
+            problems.append(f"Column '{c.get('name')}': min must be below 0 for negative only.")
     return problems
+
+import math
+
+MATCH_MODES = ["exact", "contains"]
+SIGNS = ["any", "positive", "negative", "non-negative"]
+DATE_FORMATS = {
+    "Auto (any format)": None,
+    "YYYY-MM-DD": "%Y-%m-%d",
+    "DD/MM/YYYY": "%d/%m/%Y",
+    "MM/DD/YYYY": "%m/%d/%Y",
+    "DD-MM-YYYY": "%d-%m-%Y",
+    "YYYY/MM/DD": "%Y/%m/%d",
+    "DD-Mon-YYYY": "%d-%b-%Y",
+}
+
+
+def columns_to_rows(columns: list[dict]) -> list[dict]:
+    """Schema columns -> rows for the editor table (with defaults)."""
+    rows = []
+    for c in columns:
+        rows.append({
+            "name": c["name"],
+            "type": c.get("type", "string"),
+            "required": bool(c.get("required", False)),
+            "unique": bool(c.get("unique", False)),
+            "allowed_values": ", ".join(c.get("allowed_values", [])),
+            "match_mode": c.get("match_mode", "exact"),
+            "case_sensitive": bool(c.get("case_sensitive", True)),
+            "min_value": c.get("min_value"),
+            "max_value": c.get("max_value"),
+            "sign": c.get("sign", "any"),
+            "date_format": c.get("date_format", "Auto (any format)"),
+        })
+    return rows
+
+
+def _number(value):
+    """Return int/float, or None if the cell is empty."""
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return None
+    value = float(value)
+    return int(value) if value.is_integer() else value
+
+
+def rows_to_columns(rows: list[dict]) -> list[dict]:
+    """Editor table rows -> clean schema columns."""
+    columns = []
+    for r in rows:
+        name = str(r.get("name") or "").strip()
+        if not name and not r.get("type"):
+            continue  # skip empty rows
+        typ = r.get("type") or "string"
+        rule = {
+            "name": name,
+            "type": typ,
+            "required": bool(r.get("required")),
+            "unique": bool(r.get("unique")),
+        }
+        raw = str(r.get("allowed_values") or "")
+        values = [v.strip() for v in raw.split(",") if v.strip()]
+        if values:
+            rule["allowed_values"] = values
+            rule["match_mode"] = r.get("match_mode") or "exact"
+            rule["case_sensitive"] = bool(r.get("case_sensitive"))
+        if typ in ("integer", "float"):
+            for key in ("min_value", "max_value"):
+                number = _number(r.get(key))
+                if number is not None:
+                    rule[key] = number
+            if r.get("sign") and r["sign"] != "any":
+                rule["sign"] = r["sign"]
+        if typ == "date" and r.get("date_format") not in (None, "Auto (any format)"):
+            rule["date_format"] = r["date_format"]
+        columns.append(rule)
+    return columns
