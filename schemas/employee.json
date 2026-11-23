@@ -1,8 +1,8 @@
 {
-  "name": "employee_data",
+  "name": "employee",
   "version": 1,
-  "created_at": "2026-11-17T18:14:01",
-  "updated_at": "2026-11-17T18:14:01",
+  "created_at": "2026-11-20T11:30:58",
+  "updated_at": "2026-11-20T11:30:58",
   "columns": [
     {
       "name": "employee_id",

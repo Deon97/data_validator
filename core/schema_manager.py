@@ -4,9 +4,12 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-
-SCHEMA_DIR = Path(__file__).resolve().parent.parent / "schemas"
-SCHEMA_DIR.mkdir(exist_ok=True)
+import os
+SCHEMA_DIR = Path(os.environ.get(
+    "SCHEMA_DIR", Path(__file__).resolve().parent.parent / "schemas"))
+SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
+#SCHEMA_DIR = Path(__file__).resolve().parent.parent / "schemas"
+#SCHEMA_DIR.mkdir(exist_ok=True)
 
 TYPES = ["string", "integer", "float", "date", "boolean"]
 BOOL_VALUES = {"true", "false", "yes", "no", "y", "n", "1", "0"}
