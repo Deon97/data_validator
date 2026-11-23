@@ -1,0 +1,231 @@
+{
+  "name": "IS_Reservation_Fee",
+  "version": 2,
+  "created_at": "2026-11-20T11:37:50",
+  "updated_at": "2026-11-23T10:56:31",
+  "columns": [
+    {
+      "name": "EstablishmentID",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "ReservationID",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "DATEUSERRESA",
+      "type": "date",
+      "required": true,
+      "unique": false,
+      "date_format": "YYYY-MM-DD"
+    },
+    {
+      "name": "NUMDOSSIER",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "NUMRESA",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "STATUS",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "STATUSDATE",
+      "type": "date",
+      "required": true,
+      "unique": false,
+      "date_format": "YYYY-MM-DD"
+    },
+    {
+      "name": "DATEARRIVEE",
+      "type": "date",
+      "required": true,
+      "unique": false,
+      "date_format": "YYYY-MM-DD"
+    },
+    {
+      "name": "DATEPTHOT",
+      "type": "date",
+      "required": true,
+      "unique": false,
+      "date_format": "YYYY-MM-DD"
+    },
+    {
+      "name": "DATEDEPART",
+      "type": "date",
+      "required": true,
+      "unique": false,
+      "date_format": "YYYY-MM-DD"
+    },
+    {
+      "name": "STAY_END_DAY_NUMBER",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "CODECRORAT",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "CODEORGCRO",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "CODETARIF",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "CODETARSKEY",
+      "type": "string",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "CODERSVLIEN",
+      "type": "string",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "NOMCLIENT",
+      "type": "string",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "ChannelCode",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "Channel",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "DistributionChannelFamilyCode",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "DistributionChannelFamily",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "channelFamilyGroupingCode",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "ChannelFamilyGrouping",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "SalesChannelCode",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "SalesChannel",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "LeverCode",
+      "type": "string",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "Lever",
+      "type": "string",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "RoomType",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "TransactionType",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "SERVICEQUANTITY",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "QTEPRODRESA",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "TURNOVEREURO",
+      "type": "float",
+      "required": true,
+      "unique": false,
+      "sign": "non-negative"
+    },
+    {
+      "name": "TURNOVERLOCAL",
+      "type": "float",
+      "required": true,
+      "unique": false,
+      "sign": "non-negative"
+    },
+    {
+      "name": "CODEDEVISE",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "TaxRate",
+      "type": "float",
+      "required": false,
+      "unique": false
+    },
+    {
+      "name": "TaxIncludedinTARSData",
+      "type": "boolean",
+      "required": false,
+      "unique": false
+    }
+  ]
+}
