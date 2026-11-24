@@ -6,14 +6,39 @@ import streamlit as st
 from core import file_reader as fr
 from core import schema_manager as sm
 from core.validator import validate, check_schema_match, suggest_schema
+from pathlib import Path
 
-st.set_page_config(page_title="Data Validation Tool", layout="wide")
-st.title("✅ Data Validation Tool")
+
+def get_version() -> str:
+    f = Path(__file__).resolve().parent / "VERSION.txt"
+    return f.read_text(encoding="utf-8").strip() if f.exists() else "unknown"
+
+ASSETS = Path(__file__).resolve().parent / "assets"
+LOGO = ASSETS / "logo.png"
+
+
+st.set_page_config(
+    page_title="Data Validation Tool",
+    page_icon=str(LOGO) if LOGO.exists() else "✅",
+    layout="wide",
+)
+#st.set_page_config(page_title="Data Validation Tool", layout="wide")
+#st.title("✅ Data Validation Tool")
+col_logo, col_title = st.columns([1, 8])
+if LOGO.exists():
+    col_logo.image(str(LOGO), width=90)
+col_title.title("Data Validation Tool")
 
 page = st.sidebar.radio(
     "Menu", ["1. Create Schema", "2. Validate Data", "3. Manage Schemas"]
 )
-
+st.sidebar.divider()
+if LOGO.exists():
+    st.sidebar.image(str(LOGO), width=110)
+st.sidebar.caption("Designed and developed by IS Finance, Bangkok, "
+                   "for data validation purposes.")
+st.sidebar.caption("Questions or feedback: meapac.is.finance@accor.com")
+st.sidebar.caption(f"Version {get_version()}")
 
 def to_excel_bytes(df):
     buffer = io.BytesIO()
