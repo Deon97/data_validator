@@ -1,8 +1,8 @@
 {
   "name": "netflix_data",
-  "version": 2,
+  "version": 3,
   "created_at": "2026-11-17T15:41:46",
-  "updated_at": "2026-11-17T15:46:07",
+  "updated_at": "2026-11-24T18:21:17",
   "columns": [
     {
       "name": "show_id",
