@@ -1,8 +1,10 @@
 {
   "name": "customer",
   "version": 1,
-  "created_at": "2026-11-20T11:23:42",
-  "updated_at": "2026-11-20T11:23:42",
+  "created_at": "2026-11-26T16:49:50",
+  "created_by": "ZAHTUN",
+  "updated_at": "2026-11-26T16:49:50",
+  "updated_by": "ZAHTUN",
   "columns": [
     {
       "name": "customer_id",

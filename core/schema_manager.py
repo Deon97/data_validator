@@ -1,18 +1,36 @@
+import getpass
 import json
+import math
+import os
 import re
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-import os
+
+# The .bat file sets SCHEMA_DIR to the synced SharePoint folder.
+# If it is not set (for example during development), use the local folder.
 SCHEMA_DIR = Path(os.environ.get(
     "SCHEMA_DIR", Path(__file__).resolve().parent.parent / "schemas"))
 SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
-#SCHEMA_DIR = Path(__file__).resolve().parent.parent / "schemas"
-#SCHEMA_DIR.mkdir(exist_ok=True)
 
 TYPES = ["string", "integer", "float", "date", "boolean"]
 BOOL_VALUES = {"true", "false", "yes", "no", "y", "n", "1", "0"}
+MATCH_MODES = ["exact", "contains"]
+SIGNS = ["any", "positive", "negative", "non-negative"]
+DATE_FORMATS = {
+    "Auto (any format)": None,
+    "YYYY-MM-DD": "%Y-%m-%d",
+    "DD/MM/YYYY": "%d/%m/%Y",
+    "MM/DD/YYYY": "%m/%d/%Y",
+    "DD-MM-YYYY": "%d-%m-%Y",
+    "YYYY/MM/DD": "%Y/%m/%d",
+    "DD-Mon-YYYY": "%d-%b-%Y",
+}
+
+
+class SchemaConflictError(Exception):
+    """Raised when someone else saved the schema after you opened it."""
 
 
 def safe_name(name: str) -> str:
@@ -53,25 +71,44 @@ def infer_schema(df: pd.DataFrame) -> list[dict]:
     return columns
 
 
-def save_schema(name: str, columns: list[dict], overwrite=True) -> str:
+def save_schema(name: str, columns: list[dict], overwrite=True,
+                expected_version=None) -> str:
     name = safe_name(name)
     path = SCHEMA_DIR / f"{name}.json"
-    version = 1
-    created_at = datetime.now().isoformat(timespec="seconds")
+    user = getpass.getuser()
+    now = datetime.now().isoformat(timespec="seconds")
+    version, created_at, created_by = 1, now, user
+
     if path.exists():
         if not overwrite:
             raise FileExistsError(f"Schema '{name}' already exists.")
         old = json.loads(path.read_text(encoding="utf-8"))
+        if expected_version is not None and old.get("version") != expected_version:
+            raise SchemaConflictError(
+                "Someone else changed this schema. Please reload the page "
+                "and try again.")
+        # Keep a copy of the old version
+        history = SCHEMA_DIR / "history"
+        history.mkdir(exist_ok=True)
+        (history / f"{name}_v{old.get('version', 1)}.json").write_text(
+            json.dumps(old, indent=2), encoding="utf-8")
         version = old.get("version", 1) + 1
-        created_at = old.get("created_at", created_at)
+        created_at = old.get("created_at", now)
+        created_by = old.get("created_by", user)
+
     data = {
         "name": name,
         "version": version,
         "created_at": created_at,
-        "updated_at": datetime.now().isoformat(timespec="seconds"),
+        "created_by": created_by,
+        "updated_at": now,
+        "updated_by": user,
         "columns": columns,
     }
-    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    # Write to a temporary file first, then replace (avoids half-written files)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    tmp.replace(path)
     return name
 
 
@@ -86,6 +123,7 @@ def load_schema(name: str) -> dict:
 
 def delete_schema(name: str):
     (SCHEMA_DIR / f"{safe_name(name)}.json").unlink(missing_ok=True)
+
 
 def validate_columns(columns: list[dict]) -> list[str]:
     """Return a list of problems. An empty list means the schema is OK."""
@@ -116,20 +154,6 @@ def validate_columns(columns: list[dict]) -> list[str]:
         if c.get("sign") == "negative" and lo is not None and lo >= 0:
             problems.append(f"Column '{c.get('name')}': min must be below 0 for negative only.")
     return problems
-
-import math
-
-MATCH_MODES = ["exact", "contains"]
-SIGNS = ["any", "positive", "negative", "non-negative"]
-DATE_FORMATS = {
-    "Auto (any format)": None,
-    "YYYY-MM-DD": "%Y-%m-%d",
-    "DD/MM/YYYY": "%d/%m/%Y",
-    "MM/DD/YYYY": "%m/%d/%Y",
-    "DD-MM-YYYY": "%d-%m-%Y",
-    "YYYY/MM/DD": "%Y/%m/%d",
-    "DD-Mon-YYYY": "%d-%b-%Y",
-}
 
 
 def columns_to_rows(columns: list[dict]) -> list[dict]:
