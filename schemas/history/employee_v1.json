@@ -1,0 +1,32 @@
+{
+  "name": "employee",
+  "version": 1,
+  "created_at": "2026-11-20T11:30:58",
+  "updated_at": "2026-11-20T11:30:58",
+  "columns": [
+    {
+      "name": "employee_id",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "employee_name",
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "age",
+      "type": "integer",
+      "required": true,
+      "unique": false
+    },
+    {
+      "name": "position",
+      "type": "string",
+      "required": true,
+      "unique": false
+    }
+  ]
+}
